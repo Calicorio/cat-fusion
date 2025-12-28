@@ -1,0 +1,200 @@
+{
+  "meta": {
+    "version": "1.0",
+    "description": "CatFusion progression system design - 30 levels across 6 tiers"
+  },
+
+  "tiers": {
+    "kitten": {
+      "level_range": [1, 5],
+      "description": "Basic cute kittens, small and simple",
+      "size_multiplier": 1.0,
+      "rarity_color": "#FFFFFF",
+      "archetypes": ["tabby", "gray", "black", "white", "orange"],
+      "behaviors": ["idle", "walk", "sit", "meow"],
+      "has_particles": false
+    },
+    "house": {
+      "level_range": [6, 10],
+      "description": "Adult domestic cats, more detailed",
+      "size_multiplier": 1.3,
+      "rarity_color": "#7FFF7F",
+      "archetypes": ["shorthair", "longhair", "tuxedo", "calico", "siamese"],
+      "behaviors": ["idle", "walk", "sit", "meow", "nap"],
+      "has_particles": false
+    },
+    "fancy": {
+      "level_range": [11, 15],
+      "description": "Purebred cats with accessories (bows, collars)",
+      "size_multiplier": 1.5,
+      "rarity_color": "#7F7FFF",
+      "archetypes": ["persian", "maine_coon", "ragdoll", "bengal", "scottish_fold"],
+      "behaviors": ["idle", "walk", "sit", "meow", "nap", "groom"],
+      "has_particles": false
+    },
+    "mystical": {
+      "level_range": [16, 20],
+      "description": "Magical cats with glowing effects and unusual colors",
+      "size_multiplier": 1.8,
+      "rarity_color": "#FF7FFF",
+      "archetypes": ["spirit", "shadow", "crystal", "aurora", "celestial"],
+      "behaviors": ["idle", "walk", "sit", "meow", "nap", "groom", "magic"],
+      "has_particles": true
+    },
+    "legendary": {
+      "level_range": [21, 25],
+      "description": "Legendary mythical cats with special effects",
+      "size_multiplier": 2.2,
+      "rarity_color": "#FFD700",
+      "archetypes": ["phoenix", "dragon", "thunder", "frost", "void"],
+      "behaviors": ["idle", "walk", "sit", "meow", "nap", "groom", "magic", "special"],
+      "has_particles": true
+    },
+    "cosmic": {
+      "level_range": [26, 30],
+      "description": "Universe-level cats, the ultimate evolution",
+      "size_multiplier": 2.5,
+      "rarity_color": "#FF00FF",
+      "archetypes": ["nebula", "supernova", "blackhole", "quantum", "infinity"],
+      "behaviors": ["idle", "walk", "sit", "meow", "nap", "groom", "magic", "special", "cosmic"],
+      "has_particles": true
+    }
+  },
+
+  "cats": [
+    {"level": 1, "tier": "kitten", "archetype": "tabby", "name": "Tabby Kitten", "base_rate": 1.0},
+    {"level": 2, "tier": "kitten", "archetype": "gray", "name": "Gray Kitten", "base_rate": 1.0},
+    {"level": 3, "tier": "kitten", "archetype": "black", "name": "Black Kitten", "base_rate": 1.0},
+    {"level": 4, "tier": "kitten", "archetype": "white", "name": "White Kitten", "base_rate": 1.0},
+    {"level": 5, "tier": "kitten", "archetype": "orange", "name": "Orange Kitten", "base_rate": 1.0},
+
+    {"level": 6, "tier": "house", "archetype": "shorthair", "name": "Shorthair Cat", "base_rate": 1.2},
+    {"level": 7, "tier": "house", "archetype": "longhair", "name": "Longhair Cat", "base_rate": 1.2},
+    {"level": 8, "tier": "house", "archetype": "tuxedo", "name": "Tuxedo Cat", "base_rate": 1.2},
+    {"level": 9, "tier": "house", "archetype": "calico", "name": "Calico Cat", "base_rate": 1.2},
+    {"level": 10, "tier": "house", "archetype": "siamese", "name": "Siamese Cat", "base_rate": 1.2},
+
+    {"level": 11, "tier": "fancy", "archetype": "persian", "name": "Persian", "base_rate": 1.5},
+    {"level": 12, "tier": "fancy", "archetype": "maine_coon", "name": "Maine Coon", "base_rate": 1.5},
+    {"level": 13, "tier": "fancy", "archetype": "ragdoll", "name": "Ragdoll", "base_rate": 1.5},
+    {"level": 14, "tier": "fancy", "archetype": "bengal", "name": "Bengal", "base_rate": 1.5},
+    {"level": 15, "tier": "fancy", "archetype": "scottish_fold", "name": "Scottish Fold", "base_rate": 1.5},
+
+    {"level": 16, "tier": "mystical", "archetype": "spirit", "name": "Spirit Cat", "base_rate": 2.0},
+    {"level": 17, "tier": "mystical", "archetype": "shadow", "name": "Shadow Cat", "base_rate": 2.0},
+    {"level": 18, "tier": "mystical", "archetype": "crystal", "name": "Crystal Cat", "base_rate": 2.0},
+    {"level": 19, "tier": "mystical", "archetype": "aurora", "name": "Aurora Cat", "base_rate": 2.0},
+    {"level": 20, "tier": "mystical", "archetype": "celestial", "name": "Celestial Cat", "base_rate": 2.0},
+
+    {"level": 21, "tier": "legendary", "archetype": "phoenix", "name": "Phoenix Cat", "base_rate": 2.5},
+    {"level": 22, "tier": "legendary", "archetype": "dragon", "name": "Dragon Cat", "base_rate": 2.5},
+    {"level": 23, "tier": "legendary", "archetype": "thunder", "name": "Thunder Cat", "base_rate": 2.5},
+    {"level": 24, "tier": "legendary", "archetype": "frost", "name": "Frost Cat", "base_rate": 2.5},
+    {"level": 25, "tier": "legendary", "archetype": "void", "name": "Void Cat", "base_rate": 2.5},
+
+    {"level": 26, "tier": "cosmic", "archetype": "nebula", "name": "Nebula Cat", "base_rate": 3.0},
+    {"level": 27, "tier": "cosmic", "archetype": "supernova", "name": "Supernova Cat", "base_rate": 3.0},
+    {"level": 28, "tier": "cosmic", "archetype": "blackhole", "name": "Black Hole Cat", "base_rate": 3.0},
+    {"level": 29, "tier": "cosmic", "archetype": "quantum", "name": "Quantum Cat", "base_rate": 3.0},
+    {"level": 30, "tier": "cosmic", "archetype": "infinity", "name": "Infinity Cat", "base_rate": 3.0}
+  ],
+
+  "economy": {
+    "currency_formula": {
+      "description": "Currency per tick = base_rate * (level ^ rate_exponent)",
+      "rate_exponent": 1.5,
+      "tick_interval_formula": "max(1.0, 5.0 / sqrt(level))"
+    },
+    "spawn_settings": {
+      "base_spawn_time": 20.0,
+      "spawn_time_growth": 1.15,
+      "max_spawn_time": 300.0,
+      "max_cats_on_screen": 10,
+      "formula": "min(base * (growth ^ cats_spawned_total * 0.05), max_spawn_time)"
+    },
+    "fusion_rewards": {
+      "bonus_formula": "hourly_production * bonus_percentage",
+      "bonus_percentage_by_tier": {
+        "kitten": 0.05,
+        "house": 0.08,
+        "fancy": 0.12,
+        "mystical": 0.18,
+        "legendary": 0.25,
+        "cosmic": 0.35
+      }
+    },
+    "offline_earnings": {
+      "multiplier": 0.5,
+      "max_offline_hours": 24,
+      "description": "Players earn 50% of online rate while offline, capped at 24 hours"
+    }
+  },
+
+  "visual_design": {
+    "base_sprite_size": 32,
+    "size_by_tier": {
+      "kitten": 32,
+      "house": 40,
+      "fancy": 48,
+      "mystical": 56,
+      "legendary": 64,
+      "cosmic": 72
+    },
+    "color_palette": {
+      "kitten": {
+        "tabby": "#D2691E",
+        "gray": "#808080",
+        "black": "#2F2F2F",
+        "white": "#F5F5F5",
+        "orange": "#FF8C00"
+      },
+      "house": {
+        "shorthair": "#A0A0A0",
+        "longhair": "#D2B48C",
+        "tuxedo": "#1A1A1A",
+        "calico": "#FFE4C4",
+        "siamese": "#F5DEB3"
+      },
+      "fancy": {
+        "persian": "#FFFAF0",
+        "maine_coon": "#8B4513",
+        "ragdoll": "#FFF8DC",
+        "bengal": "#DAA520",
+        "scottish_fold": "#C0C0C0"
+      },
+      "mystical": {
+        "spirit": "#E6E6FA",
+        "shadow": "#4B0082",
+        "crystal": "#00CED1",
+        "aurora": "#7FFFD4",
+        "celestial": "#FFD700"
+      },
+      "legendary": {
+        "phoenix": "#FF4500",
+        "dragon": "#228B22",
+        "thunder": "#FFD700",
+        "frost": "#00BFFF",
+        "void": "#800080"
+      },
+      "cosmic": {
+        "nebula": "#FF69B4",
+        "supernova": "#FF6347",
+        "blackhole": "#1A0033",
+        "quantum": "#00FFFF",
+        "infinity": "#FFFFFF"
+      }
+    }
+  },
+
+  "progression_milestones": {
+    "description": "Key moments in player progression",
+    "milestones": [
+      {"level": 5, "name": "First House Cat", "reward_multiplier": 2.0},
+      {"level": 10, "name": "Cat Collector", "reward_multiplier": 2.0},
+      {"level": 15, "name": "Fancy Feline", "reward_multiplier": 3.0},
+      {"level": 20, "name": "Mystic Master", "reward_multiplier": 3.0},
+      {"level": 25, "name": "Legend Achieved", "reward_multiplier": 5.0},
+      {"level": 30, "name": "Cosmic Completion", "reward_multiplier": 10.0}
+    ]
+  }
+}

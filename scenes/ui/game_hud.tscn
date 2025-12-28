@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0m2p3uo8exlg"]
+
+[ext_resource type="Script" path="res://scripts/ui/game_hud.gd" id="1_c7x5k"]
+
+[node name="GameHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_c7x5k")
+
+[node name="VBox" type="VBox" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -150.0
+offset_right = 300.0
+offset_bottom = -20.0
+
+[node name="CurrencyLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Tunca Cans: 0"
+
+[node name="SpawnProgress" type="ProgressBar" parent="VBox"]
+layout_mode = 2
+max_value = 100.0
+
+[node name="SpawnTimerLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Next Cat: 30.0s"
+
+[node name="InfoLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = ""
+modulate = Color(1, 1, 0, 1)
+

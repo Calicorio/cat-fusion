@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://b6gqdkajw2skn"]
+
+[ext_resource type="Script" path="res://scripts/systems/cat.gd" id="1_0j3s4"]
+[ext_resource type="Script" path="res://scripts/systems/cat_behavior_controller.gd" id="2_8s8fv"]
+[ext_resource type="Script" path="res://scripts/systems/currency_generator.gd" id="3_h5l6g"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1qh4m"]
+radius = 20.0
+
+[node name="Cat" type="CharacterBody2D"]
+script = ExtResource("1_0j3s4")
+
+[node name="Visuals" type="Node2D" parent="."]
+
+[node name="Sprite" type="AnimatedSprite2D" parent="Visuals"]
+
+[node name="SelectionIndicator" type="ColorRect" parent="Visuals"]
+visible = false
+modulate = Color(1, 1, 0, 0.5)
+offset_left = -16.0
+offset_top = -32.0
+offset_right = 16.0
+offset_bottom = -28.0
+color = Color(1, 1, 0, 1)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1qh4m")
+
+[node name="BehaviorController" type="Node" parent="."]
+script = ExtResource("2_8s8fv")
+
+[node name="CurrencyGenerator" type="Node" parent="."]
+script = ExtResource("3_h5l6g")
+
+[node name="InteractionArea" type="Area2D" parent="."]
+
+[node name="InteractionCollision" type="CollisionShape2D" parent="InteractionArea"]
+shape = SubResource("CircleShape2D_1qh4m")
