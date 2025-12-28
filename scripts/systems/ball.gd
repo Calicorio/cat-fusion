@@ -4,10 +4,11 @@ class_name Ball extends CharacterBody2D
 @onready var collision: CollisionShape2D = $Collision
 
 var ball_color: Color = Color(0.85, 0.55, 0.65)  # Pink yarn ball
-var ball_radius: float = 10.0
-var friction: float = 0.92  # More friction - slows down faster
-var min_velocity: float = 3.0
-var bounce_factor: float = 0.5  # Less bouncy
+var ball_radius: float = 12.0  # Slightly larger for visibility
+var friction: float = 0.96  # Less friction - rolls longer
+var pushed_friction: float = 0.99  # Almost no friction when actively pushed
+var min_velocity: float = 2.0
+var bounce_factor: float = 0.6  # Slightly bouncy
 
 var room_bounds: Rect2 = Rect2(50, 100, 700, 400)
 var is_being_pushed: bool = false  # Visual indicator when cat is pushing
@@ -81,8 +82,10 @@ func setup_collision():
 	collision.shape = shape
 
 func _physics_process(delta):
-	# Apply friction (less if being pushed)
-	if not is_being_pushed:
+	# Apply friction (much less if being pushed)
+	if is_being_pushed:
+		velocity *= pushed_friction
+	else:
 		velocity *= friction
 
 	# Stop if moving very slowly
@@ -91,16 +94,21 @@ func _physics_process(delta):
 		is_being_pushed = false
 		return
 
-	# Rotate sprite based on movement (rolling effect)
+	# Rotate sprite based on movement (rolling effect) - more visible rotation
 	if sprite and velocity.length() > 0:
-		var roll_speed = velocity.length() * 0.1
+		var roll_speed = velocity.length() * 0.15
 		sprite.rotation += roll_speed * delta * sign(velocity.x)
 
-	# Move and handle room boundary collision
-	var collision_info = move_and_collide(velocity * delta)
-
-	if collision_info:
-		velocity = velocity.bounce(collision_info.get_normal()) * bounce_factor
+	# When being pushed by cat, move directly (ignore cat collision)
+	# Otherwise use move_and_collide for bouncing off walls/objects
+	if is_being_pushed:
+		# Direct position update - cat is pushing us
+		global_position += velocity * delta
+	else:
+		# Normal physics with collision
+		var collision_info = move_and_collide(velocity * delta)
+		if collision_info:
+			velocity = velocity.bounce(collision_info.get_normal()) * bounce_factor
 
 	# Bounce off room boundaries
 	check_room_bounds()
@@ -142,6 +150,7 @@ func gentle_push(direction: Vector2, speed: float):
 	# Gentle continuous push - used when cat is walking with ball
 	velocity = direction.normalized() * speed
 	is_being_pushed = true
+	print("Ball: gentle_push called! dir=%s speed=%.1f velocity=%s" % [direction, speed, velocity])
 
 func stop_push():
 	is_being_pushed = false

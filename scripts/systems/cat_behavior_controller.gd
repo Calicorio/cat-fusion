@@ -1,6 +1,6 @@
 class_name CatBehaviorController extends Node
 
-@export var behavior_set: Array = ["idle", "walk", "sit", "meow"]
+@export var behavior_set: Array = ["idle", "walk", "sit", "meow", "play"]
 @export var current_behavior: String = "idle"
 @export var behavior_timer: float = 0.0
 
@@ -10,7 +10,7 @@ var behavior_durations = {
 	"walk": [1.0, 3.0],
 	"sit": [3.0, 6.0],
 	"meow": [0.5, 1.0],
-	"play": [2.0, 4.0],
+	"play": [6.0, 12.0],  # Longer duration to reach and play with ball
 	"nap": [4.0, 8.0],
 	"groom": [2.0, 4.0]
 }
@@ -89,9 +89,11 @@ func execute_meow():
 
 func execute_play():
 	# Try to play with the ball if it exists
+	print("BehaviorController: execute_play called, room_ball=%s" % GameManager.room_ball)
 	if GameManager.room_ball and cat_owner.has_method("start_playing_with_ball"):
 		cat_owner.start_playing_with_ball(GameManager.room_ball)
 	elif cat_owner.has_method("play_animation"):
+		print("BehaviorController: No ball, just playing animation")
 		cat_owner.play_animation("play")
 
 func execute_nap():

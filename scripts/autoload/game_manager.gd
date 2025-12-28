@@ -104,7 +104,7 @@ func _setup_fallback_cat_library():
 		cat_data.name = "Cat Level %d" % level
 		cat_data.base_currency_rate = 1.0
 		cat_data.sprite_size = Vector2(32, 32)
-		cat_data.behavior_set = ["idle", "walk", "sit", "meow"]
+		cat_data.behavior_set = ["idle", "walk", "sit", "meow", "play"]
 		cat_data.tier = get_tier_for_level(level)
 		cat_data_library[level] = cat_data
 	print("Fallback library created with %d levels" % cat_data_library.size())
@@ -130,7 +130,7 @@ func get_tier_info(tier_name: String) -> Dictionary:
 	return {
 		"size_multiplier": 1.0,
 		"rarity_color": "#FFFFFF",
-		"behaviors": ["idle", "walk", "sit", "meow"]
+		"behaviors": ["idle", "walk", "sit", "meow", "play"]
 	}
 
 func _on_save_loaded(save_data: GameSave):

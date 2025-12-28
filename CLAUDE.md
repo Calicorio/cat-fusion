@@ -593,6 +593,59 @@ func end_drag():
     try_fusion_with_nearby()
 ```
 
+### Tween.set_loops(0) does NOT loop
+**Problem:** `set_loops(0)` means "loop 0 times" (no looping), not infinite looping.
+**Solution:** Use `set_loops()` with no argument for infinite looping:
+```gdscript
+# ❌ DON'T - set_loops(0) means NO looping!
+var tween = create_tween()
+tween.set_loops(0)  # This runs once, not forever!
+tween.tween_property(sprite, "rotation", 360, 1.0)
+
+# ✅ DO - set_loops() with no argument loops forever
+var tween = create_tween()
+tween.set_loops()  # Infinite looping
+tween.tween_property(sprite, "rotation", 360, 1.0)
+```
+
+### CharacterBody2D collision blocks pushing movement
+**Problem:** When one CharacterBody2D pushes another (e.g., cat pushing ball), `move_and_collide()` stops movement at collision even if we skip bounce logic.
+**Solution:** Use direct position update when being pushed, fall back to `move_and_collide` when rolling free:
+```gdscript
+var is_being_pushed: bool = false
+
+func _physics_process(delta):
+	if is_being_pushed:
+		# Direct movement - ignore collision with pusher
+		global_position += velocity * delta
+	else:
+		# Normal physics with collision
+		var collision_info = move_and_collide(velocity * delta)
+		if collision_info:
+			velocity = velocity.bounce(collision_info.get_normal())
+
+func gentle_push(direction: Vector2, speed: float):
+	velocity = direction.normalized() * speed
+	is_being_pushed = true
+
+func stop_push():
+	is_being_pushed = false
+```
+
+### Behavior not appearing in cats
+**Problem:** A behavior (like "play") exists in code but cats never do it.
+**Solution:** Ensure the behavior is added to the tier's behavior set in progression data AND fallbacks:
+```gdscript
+# In progression_design.json - add to each tier:
+"behaviors": ["idle", "walk", "sit", "meow", "play"]
+
+# In game_manager.gd fallbacks:
+cat_data.behavior_set = ["idle", "walk", "sit", "meow", "play"]
+
+# In behavior_controller.gd default:
+@export var behavior_set: Array = ["idle", "walk", "sit", "meow", "play"]
+```
+
 ## Development Workflow Tips
 
 ### ✅ Test Early, Test Often

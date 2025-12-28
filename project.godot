@@ -20,19 +20,18 @@ config/icon="res://icon.svg"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 GameManager="*res://scripts/autoload/game_manager.gd"
 
-[input]
-
-touch="InputEventScreenTouch"
-
 [display]
 
 window/size/viewport_width=800
 window/size/viewport_height=600
 window/stretch/mode="viewport"
-window/stretch/aspect="keep"
 window/handheld/orientation=1
+
+[input]
+
+touch="InputEventScreenTouch"
 
 [rendering]
 
-renderer/rendering_method="mobile"
 textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"

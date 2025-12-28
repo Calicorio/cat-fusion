@@ -42,9 +42,9 @@ var play_state: String = "approaching"  # "approaching", "pushing", "pausing"
 var play_pause_timer: float = 0.0
 var _push_direction: Vector2 = Vector2.RIGHT
 var _push_direction_timer: float = 0.0
-const PLAY_PUSH_SPEED: float = 30.0  # Slow gentle push
-const PLAY_APPROACH_DISTANCE: float = 25.0
-const PLAY_TOUCH_DISTANCE: float = 18.0  # Close enough to push
+const PLAY_PUSH_SPEED: float = 40.0  # Gentle push speed
+const PLAY_APPROACH_DISTANCE: float = 45.0  # Must be > collision radii combined (~32px)
+const PLAY_TOUCH_DISTANCE: float = 45.0  # Close enough to push
 
 func _ready():
 	# Defer setup to ensure all nodes are ready
@@ -517,12 +517,22 @@ func process_walking(_delta):
 
 func start_playing_with_ball(ball: Node2D):
 	if not ball:
+		print("Cat %d: start_playing_with_ball called but ball is null!" % level)
 		return
 
+	# Don't reset if already playing with this ball
+	if is_playing_with_ball and target_ball == ball:
+		print("Cat %d: Already playing with ball, continuing..." % level)
+		return
+
+	print("Cat %d: START PLAYING WITH BALL!" % level)
 	is_playing_with_ball = true
 	target_ball = ball
 	play_state = "approaching"
 	_push_direction_timer = 0.0
+
+	# Visual indicator: slightly brighter/excited look
+	modulate = Color(1.1, 1.15, 1.0)  # Warm excited tint
 
 	# Face the ball
 	if sprite:
@@ -539,9 +549,13 @@ func stop_playing_with_ball():
 	_push_direction_timer = 0.0
 	velocity = Vector2.ZERO
 
-	# Reset rotation
-	if sprite:
-		sprite.rotation_degrees = 0
+	# Stop paw animation and reset rotation
+	_stop_paw_animation()
+
+	# Reset visual modulation
+	_apply_tier_effects()
+
+var _debug_timer: float = 0.0
 
 func process_ball_play(delta):
 	if not target_ball or not is_instance_valid(target_ball):
@@ -554,6 +568,12 @@ func process_ball_play(delta):
 
 	var ball_pos = target_ball.global_position
 	var distance_to_ball = global_position.distance_to(ball_pos)
+
+	# Debug print every second
+	_debug_timer += delta
+	if _debug_timer > 1.0:
+		_debug_timer = 0.0
+		print("Cat %d: play_state=%s dist=%.1f (approach=%.1f touch=%.1f)" % [level, play_state, distance_to_ball, PLAY_APPROACH_DISTANCE, PLAY_TOUCH_DISTANCE])
 
 	match play_state:
 		"approaching":
@@ -572,6 +592,14 @@ func process_ball_play(delta):
 				_start_paw_animation()
 
 		"pushing":
+			# If ball got too far, go back to approaching
+			if distance_to_ball > PLAY_APPROACH_DISTANCE * 2.0:
+				play_state = "approaching"
+				_stop_paw_animation()
+				if target_ball.has_method("stop_push"):
+					target_ball.stop_push()
+				return
+
 			# Walk slowly while pushing the ball
 			var push_direction = _get_random_push_direction(delta)
 
@@ -583,15 +611,19 @@ func process_ball_play(delta):
 			if sprite:
 				sprite.flip_h = push_direction.x < 0
 
-			# Gently push the ball
-			if distance_to_ball < PLAY_TOUCH_DISTANCE and target_ball.has_method("gentle_push"):
-				target_ball.gentle_push(push_direction, PLAY_PUSH_SPEED * 1.2)
+			# Gently push the ball - push force is higher than cat's speed
+			if distance_to_ball < PLAY_TOUCH_DISTANCE:
+				if target_ball.has_method("gentle_push"):
+					target_ball.gentle_push(push_direction, PLAY_PUSH_SPEED * 1.5)
+				else:
+					print("Cat %d: ball has no gentle_push method!" % level)
 
 			# Occasionally pause to look at ball
-			if randf() < 0.01:  # Small chance each frame
+			if randf() < 0.008:  # Small chance each frame
 				play_state = "pausing"
-				play_pause_timer = randf_range(0.5, 1.5)
+				play_pause_timer = randf_range(0.8, 2.0)
 				velocity = Vector2.ZERO
+				_stop_paw_animation()
 				if target_ball.has_method("stop_push"):
 					target_ball.stop_push()
 
@@ -627,16 +659,27 @@ func _get_random_push_direction(delta: float) -> Vector2:
 
 	return _push_direction
 
+var paw_tween: Tween = null
+
 func _start_paw_animation():
 	if not sprite:
 		return
 
-	# Gentle walking/pawing animation
-	var tween = create_tween()
-	tween.set_loops(0)  # Loop until stopped
-	tween.tween_property(sprite, "rotation_degrees", 5, 0.15)
-	tween.tween_property(sprite, "rotation_degrees", -5, 0.15)
-	tween.tween_property(sprite, "rotation_degrees", 0, 0.15)
+	# Kill existing paw animation if any
+	if paw_tween and paw_tween.is_valid():
+		paw_tween.kill()
+
+	# Gentle walking/pawing animation - loops forever until stopped
+	paw_tween = create_tween()
+	paw_tween.set_loops()  # Infinite looping
+	paw_tween.tween_property(sprite, "rotation_degrees", 8, 0.12)
+	paw_tween.tween_property(sprite, "rotation_degrees", -8, 0.12)
+
+func _stop_paw_animation():
+	if paw_tween and paw_tween.is_valid():
+		paw_tween.kill()
+	if sprite:
+		sprite.rotation_degrees = 0
 
 func _on_currency_generated(amount: int, _gen_position: Vector2):
 	show_currency_popup(amount)
