@@ -144,12 +144,14 @@ Cats exist in a cozy room and can:
   - [ ] Cats playing together
 - [ ] Behavior weights based on cat personality
 
-### Phase 6: Audio ❌ NOT STARTED
-- [ ] Background music (cozy, lofi style)
-- [ ] Meow sounds (multiple variations per tier)
+### Phase 6: Audio 🔄 PARTIALLY COMPLETE
+- [x] AudioManager autoload singleton with buses (Music, SFX)
+- [x] Background music (procedural lofi-style ambient loop)
+- [x] Meow sounds (multiple variations, pitch varies by tier)
 - [ ] Purring sounds
-- [ ] Fusion sound effect
-- [ ] Currency collect sound
+- [x] Fusion sound effect (sparkly rising chime)
+- [x] Currency collect sound (coin ding)
+- [x] Spawn sound effect (soft pop)
 - [ ] UI interaction sounds
 - [ ] Ambient room sounds (optional)
 
@@ -204,10 +206,12 @@ Cats exist in a cozy room and can:
 8. ~~**Room boundary constraints**~~ ✅ DONE (with struggle animation)
 9. ~~**Enhanced room background**~~ ✅ DONE (window, floor, decorations)
 10. ~~**Interactive ball prop**~~ ✅ DONE (cats approach and bat ball)
-11. **Source or create cat sprites** - Replace colored rectangles with pixel art
-12. **Add scratching post prop** - Another interactive prop for variety
-13. **Implement audio** - Meow sounds, background music
+11. ~~**Implement audio**~~ ✅ DONE (AudioManager with meows, fusion, currency, spawn sounds, lofi music)
+12. **Source or create cat sprites** - Replace colored rectangles with pixel art
+13. **Add scratching post prop** - Another interactive prop for variety
 14. **Cat bed as nap destination** - Cats walk to bed when napping
+15. **Add purring sounds** - Cats purr when happy/idle
+16. **Settings menu** - Sound/music toggle UI
 
 ---
 
@@ -452,7 +456,36 @@ func remove_cat(cat: Node2D):
 [autoload]
 SaveManager="*res://scripts/autoload/save_manager.gd"
 GameManager="*res://scripts/autoload/game_manager.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 ```
+
+### ✅ Audio System Architecture
+
+The AudioManager autoload handles all game audio with procedurally generated sounds:
+
+```gdscript
+# Playing sounds from anywhere
+AudioManager.play_meow(pitch)      # Pitch varies by cat tier (1.4 kitten → 0.6 cosmic)
+AudioManager.play_fusion()          # Sparkly rising chime
+AudioManager.play_currency()        # Coin ding with slight pitch variation
+AudioManager.play_spawn()           # Soft pop sound
+AudioManager.play_ui_click()        # Short tick sound
+
+# Background music control
+AudioManager.start_background_music()  # Starts lofi ambient loop with fade-in
+AudioManager.stop_music(fade_out)      # Stops with optional fade-out
+AudioManager.toggle_music()            # Toggle music on/off
+AudioManager.toggle_sfx()              # Toggle SFX on/off
+
+# Volume control (0.0 to 1.0)
+AudioManager.music_volume = 0.7
+AudioManager.sfx_volume = 1.0
+```
+
+**Procedural Sound Generation:**
+- All sounds are generated at runtime using `AudioStreamWAV`
+- No external audio files needed for basic functionality
+- Sounds can be replaced with real audio files by loading them into the sound variables
 
 ### ✅ Directory Structure
 

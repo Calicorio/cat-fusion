@@ -20,6 +20,8 @@ func _ready():
 	spawn_ball()
 	connect_signals()
 	start_first_spawn()
+	# Start background music with a short delay for smooth loading
+	get_tree().create_timer(0.5).timeout.connect(AudioManager.start_background_music)
 
 func spawn_ball():
 	var ball_scene = preload("res://ball.tscn")

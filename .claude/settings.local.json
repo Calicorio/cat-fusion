@@ -4,7 +4,9 @@
       "Bash(mkdir:*)",
       "Bash(find:*)",
       "Bash(tree:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebSearch",
+      "WebFetch(domain:forum.godotengine.org)"
     ],
     "deny": [],
     "ask": []

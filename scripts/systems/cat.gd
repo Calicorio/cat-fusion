@@ -460,6 +460,9 @@ func play_animation(animation_name: String):
 			create_tween().tween_property(self, "modulate", Color.WHITE, 0.5)
 			if sprite:
 				sprite.rotation_degrees = 0
+			# Play meow sound with pitch variation based on tier
+			var pitch = _get_meow_pitch()
+			AudioManager.play_meow(pitch)
 		"sit":
 			if sprite:
 				sprite.rotation_degrees = 5
@@ -683,6 +686,7 @@ func _stop_paw_animation():
 
 func _on_currency_generated(amount: int, _gen_position: Vector2):
 	show_currency_popup(amount)
+	AudioManager.play_currency()
 
 func show_currency_popup(amount: int):
 	# Create stylized popup text
@@ -711,7 +715,8 @@ func show_currency_popup(amount: int):
 	popup.scale = Vector2.ZERO
 	popup.pivot_offset = popup.size / 2
 
-	var tween = create_tween()
+	# Use get_tree().create_tween() so tween survives if cat is freed during fusion
+	var tween = get_tree().create_tween()
 	# Pop in effect
 	tween.tween_property(popup, "scale", Vector2(1.2, 1.2), 0.1)
 	tween.tween_property(popup, "scale", Vector2(1.0, 1.0), 0.1)
@@ -847,3 +852,23 @@ func _reset_look_rotation():
 	# Smoothly return to normal rotation
 	var tween = create_tween()
 	tween.tween_property(sprite, "rotation_degrees", 0.0, 0.3)
+
+func _get_meow_pitch() -> float:
+	# Higher tier cats have deeper meows (lower pitch)
+	if not cat_data:
+		return 1.0
+	match cat_data.tier:
+		"kitten":
+			return randf_range(1.2, 1.4)  # High pitched kitten meow
+		"house":
+			return randf_range(1.0, 1.15)  # Normal cat meow
+		"fancy":
+			return randf_range(0.95, 1.1)  # Slightly deeper
+		"mystical":
+			return randf_range(0.85, 1.0)  # Mysterious deeper tone
+		"legendary":
+			return randf_range(0.75, 0.9)  # Majestic deep meow
+		"cosmic":
+			return randf_range(0.6, 0.8)  # Very deep, otherworldly
+		_:
+			return 1.0

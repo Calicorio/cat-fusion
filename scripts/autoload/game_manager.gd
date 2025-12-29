@@ -195,6 +195,7 @@ func spawn_new_cat():
 		cats_on_field.append(new_cat)
 		cat_spawned.emit(new_cat)
 		SaveManager.increment_cats_spawned()
+		AudioManager.play_spawn()
 		print("Cat spawned successfully!")
 	else:
 		print("Failed to spawn cat!")
@@ -261,6 +262,9 @@ func attempt_fusion(cat1: Node2D, cat2: Node2D) -> bool:
 		# Currency bonus
 		var bonus = calculate_fusion_bonus(new_level)
 		add_currency(bonus)
+
+		# Play fusion sound
+		AudioManager.play_fusion()
 
 		fusion_completed.emit(fused_cat, new_level)
 
