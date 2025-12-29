@@ -52,6 +52,65 @@ layout_mode = 2
 text = ""
 modulate = Color(1, 1, 0, 1)
 
+[node name="SettingsButton" type="Button" parent="UI/GameHUD"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -60.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 28
+text = "⚙"
+
+[node name="SettingsPanel" type="PanelContainer" parent="UI/GameHUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -120.0
+offset_right = 150.0
+offset_bottom = 120.0
+
+[node name="VBox" type="VBoxContainer" parent="UI/GameHUD/SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="UI/GameHUD/SettingsPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "⚙ Settings"
+horizontal_alignment = 1
+
+[node name="MusicLabel" type="Label" parent="UI/GameHUD/SettingsPanel/VBox"]
+layout_mode = 2
+text = "🎵 Music"
+
+[node name="MusicSlider" type="HSlider" parent="UI/GameHUD/SettingsPanel/VBox"]
+layout_mode = 2
+min_value = 0.0
+max_value = 100.0
+value = 70.0
+
+[node name="SFXLabel" type="Label" parent="UI/GameHUD/SettingsPanel/VBox"]
+layout_mode = 2
+text = "🔊 Sound Effects"
+
+[node name="SFXSlider" type="HSlider" parent="UI/GameHUD/SettingsPanel/VBox"]
+layout_mode = 2
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+
+[node name="CloseButton" type="Button" parent="UI/GameHUD/SettingsPanel/VBox"]
+layout_mode = 2
+text = "Close"
+
 [node name="SaveTimer" type="Timer" parent="."]
 wait_time = 30.0
 autostart = true

@@ -11,6 +11,13 @@ extends Node2D
 @onready var spawn_timer_label: Label = $UI/GameHUD/VBox/SpawnTimerLabel
 @onready var info_label: Label = $UI/GameHUD/VBox/InfoLabel
 
+# Settings UI
+@onready var settings_button: Button = $UI/GameHUD/SettingsButton
+@onready var settings_panel: PanelContainer = $UI/GameHUD/SettingsPanel
+@onready var music_slider: HSlider = $UI/GameHUD/SettingsPanel/VBox/MusicSlider
+@onready var sfx_slider: HSlider = $UI/GameHUD/SettingsPanel/VBox/SFXSlider
+@onready var close_button: Button = $UI/GameHUD/SettingsPanel/VBox/CloseButton
+
 var room_bounds: Rect2 = Rect2(50, 100, 700, 400)
 var room_ball: Node2D = null
 
@@ -203,6 +210,16 @@ func connect_signals():
 	GameManager.spawn_timer_updated.connect(_on_spawn_timer_updated)
 	GameManager.fusion_completed.connect(_on_fusion_completed)
 
+	# Settings UI
+	settings_button.pressed.connect(_on_settings_button_pressed)
+	close_button.pressed.connect(_on_close_settings_pressed)
+	music_slider.value_changed.connect(_on_music_slider_changed)
+	sfx_slider.value_changed.connect(_on_sfx_slider_changed)
+
+	# Initialize sliders with current AudioManager values
+	music_slider.value = AudioManager.music_volume * 100
+	sfx_slider.value = AudioManager.sfx_volume * 100
+
 func start_first_spawn():
 	# Start the first spawn timer
 	GameManager.spawn_timer = 3.0  # First cat spawns quickly
@@ -317,3 +334,19 @@ func _get_fusion_particle_color(tier: String) -> Color:
 			return Color.HOT_PINK
 		_:
 			return Color.WHITE
+
+# --- Settings UI ---
+
+func _on_settings_button_pressed():
+	settings_panel.visible = true
+	AudioManager.play_ui_click()
+
+func _on_close_settings_pressed():
+	settings_panel.visible = false
+	AudioManager.play_ui_click()
+
+func _on_music_slider_changed(value: float):
+	AudioManager.music_volume = value / 100.0
+
+func _on_sfx_slider_changed(value: float):
+	AudioManager.sfx_volume = value / 100.0
