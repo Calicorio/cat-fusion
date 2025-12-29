@@ -146,18 +146,19 @@ Cats exist in a cozy room and can:
 
 ### Phase 6: Audio 🔄 PARTIALLY COMPLETE
 - [x] AudioManager autoload singleton with buses (Music, SFX)
-- [x] Background music (procedural lofi-style ambient loop)
-- [x] Meow sounds (multiple variations, pitch varies by tier)
+- [x] Background music (supports real audio files, fallback to procedural)
+- [x] Meow sounds (real audio file support, pitch varies by tier)
+- [x] Meow cooldown system (15-45s between meows per cat)
 - [ ] Purring sounds
 - [x] Fusion sound effect (sparkly rising chime)
 - [x] Currency collect sound (coin ding)
 - [x] Spawn sound effect (soft pop)
-- [ ] UI interaction sounds
+- [x] UI click sound
 - [ ] Ambient room sounds (optional)
 
-### Phase 7: UI/UX Polish ❌ NOT STARTED
+### Phase 7: UI/UX Polish 🔄 PARTIALLY COMPLETE
 - [ ] Main menu screen
-- [ ] Settings menu (sound, music toggles)
+- [x] Settings menu (cute pastel design with volume sliders)
 - [ ] Tutorial/onboarding for new players
 - [ ] Cat collection/album view
 - [ ] Statistics screen (total cats fused, highest level, etc.)
@@ -206,12 +207,12 @@ Cats exist in a cozy room and can:
 8. ~~**Room boundary constraints**~~ ✅ DONE (with struggle animation)
 9. ~~**Enhanced room background**~~ ✅ DONE (window, floor, decorations)
 10. ~~**Interactive ball prop**~~ ✅ DONE (cats approach and bat ball)
-11. ~~**Implement audio**~~ ✅ DONE (AudioManager with meows, fusion, currency, spawn sounds, lofi music)
-12. **Source or create cat sprites** - Replace colored rectangles with pixel art
-13. **Add scratching post prop** - Another interactive prop for variety
-14. **Cat bed as nap destination** - Cats walk to bed when napping
-15. **Add purring sounds** - Cats purr when happy/idle
-16. **Settings menu** - Sound/music toggle UI
+11. ~~**Implement audio**~~ ✅ DONE (AudioManager with real file support + procedural fallback)
+12. ~~**Settings menu**~~ ✅ DONE (cute pastel UI with music/SFX volume sliders)
+13. **Source or create cat sprites** - Replace colored rectangles with pixel art
+14. **Add scratching post prop** - Another interactive prop for variety
+15. **Cat bed as nap destination** - Cats walk to bed when napping
+16. **Add purring sounds** - Cats purr when happy/idle
 
 ---
 
@@ -677,6 +678,54 @@ cat_data.behavior_set = ["idle", "walk", "sit", "meow", "play"]
 
 # In behavior_controller.gd default:
 @export var behavior_set: Array = ["idle", "walk", "sit", "meow", "play"]
+```
+
+### Tween callbacks not firing when node is freed
+**Problem:** Currency popups get stuck on screen when cat is freed during fusion.
+**Solution:** Use `get_tree().create_tween()` instead of `create_tween()` so tween survives node deletion:
+```gdscript
+# ❌ DON'T - Tween dies with the node
+var tween = create_tween()
+tween.tween_callback(popup.queue_free)  # Never called if node freed!
+
+# ✅ DO - Tween bound to scene tree, survives node deletion
+var tween = get_tree().create_tween()
+tween.tween_callback(popup.queue_free)  # Always called
+```
+
+### Loading real audio files with procedural fallback
+**Pattern:** Load real audio files if they exist, fall back to procedural:
+```gdscript
+func _load_audio_files() -> void:
+    var meow_path = "res://sounds/cat_meow.mp3"
+    if ResourceLoader.exists(meow_path):
+        var meow_stream = load(meow_path)
+        if meow_stream:
+            sound_meow = meow_stream
+            print("Loaded real audio file")
+
+func _generate_placeholder_sounds() -> void:
+    # Only generate if real file wasn't loaded
+    if sound_meow_variants.is_empty():
+        # Generate procedural sounds...
+```
+
+### Cats doing same behavior at same time
+**Problem:** All cats start behaviors simultaneously, looks unnatural.
+**Solution:** Add random initial delay and per-cat cooldowns:
+```gdscript
+func _ready():
+    # Random initial delay so cats don't sync up
+    behavior_timer = randf_range(0.5, 3.0)
+
+var meow_cooldown: float = 0.0
+const MEOW_COOLDOWN_MIN: float = 15.0
+const MEOW_COOLDOWN_MAX: float = 45.0
+
+func start_new_behavior():
+    var available_behaviors = behavior_set.duplicate()
+    if meow_cooldown > 0 and "meow" in available_behaviors:
+        available_behaviors.erase("meow")  # Skip meow if on cooldown
 ```
 
 ## Development Workflow Tips
