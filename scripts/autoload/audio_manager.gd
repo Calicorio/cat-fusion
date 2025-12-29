@@ -8,12 +8,12 @@ const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
 
 # Volume settings (0.0 to 1.0)
-var music_volume: float = 0.7:
+var music_volume: float = 0.05:
 	set(value):
 		music_volume = clampf(value, 0.0, 1.0)
 		_update_bus_volume(BUS_MUSIC, music_volume)
 
-var sfx_volume: float = 1.0:
+var sfx_volume: float = 0.1:
 	set(value):
 		sfx_volume = clampf(value, 0.0, 1.0)
 		_update_bus_volume(BUS_SFX, sfx_volume)

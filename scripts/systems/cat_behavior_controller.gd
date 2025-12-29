@@ -17,13 +17,24 @@ var behavior_durations = {
 
 signal behavior_changed(new_behavior: String)
 
+# Meow cooldown to prevent too frequent meowing
+var meow_cooldown: float = 0.0
+const MEOW_COOLDOWN_MIN: float = 15.0  # Minimum seconds between meows
+const MEOW_COOLDOWN_MAX: float = 45.0  # Maximum seconds between meows
+
 func _ready():
 	if get_parent():
 		cat_owner = get_parent()
-	start_new_behavior()
+	# Random initial delay so cats don't sync up
+	behavior_timer = randf_range(0.5, 3.0)
+	# Start with a random non-meow behavior
+	current_behavior = "idle"
 
 func _process(delta):
 	behavior_timer -= delta
+	if meow_cooldown > 0:
+		meow_cooldown -= delta
+
 	if behavior_timer <= 0:
 		start_new_behavior()
 
@@ -34,7 +45,15 @@ func start_new_behavior():
 	if behavior_set.is_empty():
 		behavior_set = ["idle"]
 
-	var new_behavior = behavior_set[randi() % behavior_set.size()]
+	# Pick a random behavior, but skip meow if on cooldown
+	var available_behaviors = behavior_set.duplicate()
+	if meow_cooldown > 0 and "meow" in available_behaviors:
+		available_behaviors.erase("meow")
+
+	if available_behaviors.is_empty():
+		available_behaviors = ["idle"]
+
+	var new_behavior = available_behaviors[randi() % available_behaviors.size()]
 	change_behavior(new_behavior)
 
 func change_behavior(new_behavior: String):
@@ -84,8 +103,8 @@ func execute_sit():
 func execute_meow():
 	if cat_owner.has_method("play_animation"):
 		cat_owner.play_animation("meow")
-	# Play meow sound
-	play_meow_sound()
+	# Set cooldown so this cat doesn't meow again too soon
+	meow_cooldown = randf_range(MEOW_COOLDOWN_MIN, MEOW_COOLDOWN_MAX)
 
 func execute_play():
 	# Try to play with the ball if it exists

@@ -26,6 +26,7 @@ func _ready():
 	setup_room()
 	spawn_ball()
 	connect_signals()
+	style_settings_ui()
 	start_first_spawn()
 	# Start background music with a short delay for smooth loading
 	get_tree().create_timer(0.5).timeout.connect(AudioManager.start_background_music)
@@ -337,6 +338,102 @@ func _get_fusion_particle_color(tier: String) -> Color:
 
 # --- Settings UI ---
 
+func style_settings_ui():
+	# Pastel color palette
+	var pastel_pink = Color(1.0, 0.85, 0.88)       # Soft pink background
+	var pastel_cream = Color(1.0, 0.97, 0.92)      # Cream white
+	var pastel_coral = Color(1.0, 0.75, 0.7)       # Coral accent
+	var pastel_lavender = Color(0.9, 0.85, 0.95)   # Soft lavender
+	var text_brown = Color(0.45, 0.35, 0.3)        # Warm brown text
+	var border_pink = Color(0.95, 0.7, 0.75)       # Darker pink border
+
+	# Style the settings button (gear) - transparent background, just icon
+	var btn_empty = StyleBoxEmpty.new()
+	settings_button.add_theme_stylebox_override("normal", btn_empty)
+	settings_button.add_theme_stylebox_override("hover", btn_empty)
+	settings_button.add_theme_stylebox_override("pressed", btn_empty)
+	settings_button.add_theme_stylebox_override("focus", btn_empty)
+
+	settings_button.add_theme_color_override("font_color", text_brown)
+	settings_button.add_theme_color_override("font_hover_color", pastel_coral)
+	settings_button.add_theme_color_override("font_pressed_color", border_pink)
+	settings_button.add_theme_font_size_override("font_size", 32)
+
+	# Style the panel
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = pastel_cream
+	panel_style.border_color = border_pink
+	panel_style.set_border_width_all(4)
+	panel_style.set_corner_radius_all(20)
+	panel_style.content_margin_left = 20
+	panel_style.content_margin_right = 20
+	panel_style.content_margin_top = 15
+	panel_style.content_margin_bottom = 15
+	panel_style.shadow_color = Color(0, 0, 0, 0.1)
+	panel_style.shadow_size = 8
+	settings_panel.add_theme_stylebox_override("panel", panel_style)
+
+	# Style the title
+	var title_label = settings_panel.get_node("VBox/Title")
+	title_label.add_theme_color_override("font_color", text_brown)
+	title_label.add_theme_font_size_override("font_size", 22)
+
+	# Style the labels
+	var music_label = settings_panel.get_node("VBox/MusicLabel")
+	var sfx_label = settings_panel.get_node("VBox/SFXLabel")
+	for label in [music_label, sfx_label]:
+		label.add_theme_color_override("font_color", text_brown)
+		label.add_theme_font_size_override("font_size", 16)
+
+	# Style the sliders - make them clearly visible
+	var slider_bg = StyleBoxFlat.new()
+	slider_bg.bg_color = pastel_lavender
+	slider_bg.set_corner_radius_all(6)
+	slider_bg.content_margin_top = 8
+	slider_bg.content_margin_bottom = 8
+
+	var slider_fill = StyleBoxFlat.new()
+	slider_fill.bg_color = pastel_coral
+	slider_fill.set_corner_radius_all(6)
+	slider_fill.content_margin_top = 8
+	slider_fill.content_margin_bottom = 8
+
+	for slider in [music_slider, sfx_slider]:
+		slider.add_theme_stylebox_override("slider", slider_bg)
+		slider.add_theme_stylebox_override("grabber_area", slider_fill)
+		slider.add_theme_stylebox_override("grabber_area_highlight", slider_fill)
+		# Make grabber (the draggable circle) more visible
+		slider.add_theme_icon_override("grabber", _create_circle_texture(16, pastel_pink, border_pink))
+		slider.add_theme_icon_override("grabber_highlight", _create_circle_texture(18, pastel_coral, border_pink))
+
+	# Style close button - make whole button clickable
+	var close_style = StyleBoxFlat.new()
+	close_style.bg_color = pastel_pink
+	close_style.border_color = border_pink
+	close_style.set_border_width_all(2)
+	close_style.set_corner_radius_all(10)
+	close_style.content_margin_left = 20
+	close_style.content_margin_right = 20
+	close_style.content_margin_top = 10
+	close_style.content_margin_bottom = 10
+
+	var close_hover = StyleBoxFlat.new()
+	close_hover.bg_color = pastel_coral
+	close_hover.border_color = border_pink
+	close_hover.set_border_width_all(2)
+	close_hover.set_corner_radius_all(10)
+	close_hover.content_margin_left = 20
+	close_hover.content_margin_right = 20
+	close_hover.content_margin_top = 10
+	close_hover.content_margin_bottom = 10
+
+	close_button.add_theme_stylebox_override("normal", close_style)
+	close_button.add_theme_stylebox_override("hover", close_hover)
+	close_button.add_theme_stylebox_override("pressed", close_hover)
+	close_button.add_theme_color_override("font_color", text_brown)
+	close_button.add_theme_color_override("font_hover_color", text_brown)
+	close_button.add_theme_font_size_override("font_size", 16)
+
 func _on_settings_button_pressed():
 	settings_panel.visible = true
 	AudioManager.play_ui_click()
@@ -350,3 +447,21 @@ func _on_music_slider_changed(value: float):
 
 func _on_sfx_slider_changed(value: float):
 	AudioManager.sfx_volume = value / 100.0
+
+func _create_circle_texture(size: int, fill_color: Color, border_color: Color) -> ImageTexture:
+	var image = Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var center = size / 2.0
+	var radius = size / 2.0 - 1
+
+	for x in range(size):
+		for y in range(size):
+			var dist = Vector2(x, y).distance_to(Vector2(center, center))
+			if dist <= radius - 2:
+				image.set_pixel(x, y, fill_color)
+			elif dist <= radius:
+				image.set_pixel(x, y, border_color)
+			else:
+				image.set_pixel(x, y, Color(0, 0, 0, 0))
+
+	var texture = ImageTexture.create_from_image(image)
+	return texture
