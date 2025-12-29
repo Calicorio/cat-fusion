@@ -116,18 +116,19 @@ func _update_bus_volume(bus_name: String, volume: float) -> void:
 
 func _generate_placeholder_sounds() -> void:
 	# Generate simple synthesized placeholder sounds
-	# These will be replaced with real audio files later
+	# Only generate if real files weren't loaded
 
-	# Meow sounds - multiple variants with different pitches
-	for i in range(4):
-		var pitch_offset = randf_range(-0.2, 0.2)
-		var meow = _create_meow_sound(0.3 + pitch_offset)
-		sound_meow_variants.append(meow)
+	# Meow sounds - only if not already loaded from file
+	if sound_meow_variants.is_empty():
+		for i in range(4):
+			var pitch_offset = randf_range(-0.2, 0.2)
+			var meow = _create_meow_sound(0.25 + pitch_offset)
+			sound_meow_variants.append(meow)
+		if sound_meow_variants.size() > 0:
+			sound_meow = sound_meow_variants[0]
+		print("AudioManager: Using procedural meow sounds")
 
-	if sound_meow_variants.size() > 0:
-		sound_meow = sound_meow_variants[0]
-
-	# Other sounds
+	# Other sounds (always procedural for now)
 	sound_fusion = _create_fusion_sound()
 	sound_currency = _create_currency_sound()
 	sound_spawn = _create_spawn_sound()
