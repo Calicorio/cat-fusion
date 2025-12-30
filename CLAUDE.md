@@ -48,6 +48,8 @@ Cats exist in a cozy room and can:
 - Walk around the room
 - Sit, lick themselves, nap
 - Play with props (ball, toys)
+- Scratch the scratching post
+- Purr when settling down to nap
 
 ### Technical Requirements
 - Engine: Godot 4.5.1
@@ -119,8 +121,8 @@ Cats exist in a cozy room and can:
 - [ ] Upgrade to actual pixel art sprites (replace procedural)
 - [x] Interactive props:
   - [x] Yarn ball for cats to play with (pink, rolling animation)
-  - [ ] Scratching post
-  - [ ] Cat bed as nap destination
+  - [x] Scratching post (sisal-wrapped post, cats walk to it and scratch)
+  - [x] Cat bed as nap destination (cats walk to bed when napping)
 - [ ] Parallax or depth layers (optional)
 - [ ] Day/night cycle (optional)
 
@@ -139,17 +141,21 @@ Cats exist in a cozy room and can:
   - [x] Ball physics (friction, bouncing, room boundaries, rolling rotation)
   - [x] Cat occasionally pauses to look at ball, then resumes pushing
   - [x] Smooth pawing animation while pushing
+- [x] Scratching behavior:
+  - [x] Cat walks to scratching post
+  - [x] Cat performs scratching animation (rapid up-down motion)
+  - [x] Post shakes while being scratched
 - [ ] Cat-to-cat interactions (optional):
   - [ ] Cats grooming each other
   - [ ] Cats playing together
 - [ ] Behavior weights based on cat personality
 
-### Phase 6: Audio 🔄 PARTIALLY COMPLETE
+### Phase 6: Audio ✅ COMPLETE
 - [x] AudioManager autoload singleton with buses (Music, SFX)
 - [x] Background music (supports real audio files, fallback to procedural)
 - [x] Meow sounds (real audio file support, pitch varies by tier)
 - [x] Meow cooldown system (15-45s between meows per cat)
-- [ ] Purring sounds
+- [x] Purring sounds (procedural, pitch varies by tier, plays when cat settles to nap)
 - [x] Fusion sound effect (sparkly rising chime)
 - [x] Currency collect sound (coin ding)
 - [x] Spawn sound effect (soft pop)
@@ -210,9 +216,12 @@ Cats exist in a cozy room and can:
 11. ~~**Implement audio**~~ ✅ DONE (AudioManager with real file support + procedural fallback)
 12. ~~**Settings menu**~~ ✅ DONE (cute pastel UI with music/SFX volume sliders)
 13. **Source or create cat sprites** - Replace colored rectangles with pixel art
-14. **Add scratching post prop** - Another interactive prop for variety
-15. **Cat bed as nap destination** - Cats walk to bed when napping
-16. **Add purring sounds** - Cats purr when happy/idle
+14. ~~**Add scratching post prop**~~ ✅ DONE (sisal-wrapped post, cats walk and scratch)
+15. ~~**Cat bed as nap destination**~~ ✅ DONE (cats walk to bed when napping)
+16. ~~**Add purring sounds**~~ ✅ DONE (procedural purr, plays when settling to nap)
+17. **Main menu screen** - Create a proper main menu UI
+18. **Tutorial/onboarding** - Help new players understand the game
+19. **Cat-to-cat interactions** - Cats grooming or playing together
 
 ---
 
@@ -697,15 +706,15 @@ tween.tween_callback(popup.queue_free)  # Always called
 **Pattern:** Load real audio files if they exist, fall back to procedural:
 ```gdscript
 func _load_audio_files() -> void:
-    var meow_path = "res://sounds/cat_meow.mp3"
-    if ResourceLoader.exists(meow_path):
-        var meow_stream = load(meow_path)
-        if meow_stream:
-            sound_meow = meow_stream
-            print("Loaded real audio file")
+	var meow_path = "res://sounds/cat_meow.mp3"
+	if ResourceLoader.exists(meow_path):
+		var meow_stream = load(meow_path)
+		if meow_stream:
+			sound_meow = meow_stream
+			print("Loaded real audio file")
 
 func _generate_placeholder_sounds() -> void:
-    # Only generate if real file wasn't loaded
+	# Only generate if real file wasn't loaded
     if sound_meow_variants.is_empty():
         # Generate procedural sounds...
 ```
@@ -715,17 +724,48 @@ func _generate_placeholder_sounds() -> void:
 **Solution:** Add random initial delay and per-cat cooldowns:
 ```gdscript
 func _ready():
-    # Random initial delay so cats don't sync up
-    behavior_timer = randf_range(0.5, 3.0)
+	# Random initial delay so cats don't sync up
+	behavior_timer = randf_range(0.5, 3.0)
 
 var meow_cooldown: float = 0.0
 const MEOW_COOLDOWN_MIN: float = 15.0
 const MEOW_COOLDOWN_MAX: float = 45.0
 
 func start_new_behavior():
-    var available_behaviors = behavior_set.duplicate()
-    if meow_cooldown > 0 and "meow" in available_behaviors:
-        available_behaviors.erase("meow")  # Skip meow if on cooldown
+	var available_behaviors = behavior_set.duplicate()
+	if meow_cooldown > 0 and "meow" in available_behaviors:
+		available_behaviors.erase("meow")  # Skip meow if on cooldown
+```
+
+### Double meow sound playing
+**Problem:** Meow sound plays twice when cat meows.
+**Cause:** Signal-based architecture causes duplicate calls:
+1. `change_behavior()` emits signal → `_on_behavior_changed()` → `play_animation("meow")`
+2. Then `execute_behavior()` → `execute_meow()` → `play_animation("meow")` again
+**Solution:** Don't call `play_animation()` from `execute_meow()` since signal already handles it:
+```gdscript
+func execute_meow():
+	# Note: play_animation is already called by _on_behavior_changed in cat.gd
+	# So we only need to set the cooldown here, NOT call play_animation again
+	meow_cooldown = randf_range(MEOW_COOLDOWN_MIN, MEOW_COOLDOWN_MAX)
+```
+
+### Multiple cats meowing at the same time
+**Problem:** Even with per-cat cooldowns, multiple cats can meow simultaneously.
+**Solution:** Add global meow cooldown in AudioManager:
+```gdscript
+var _global_meow_cooldown: float = 0.0
+const GLOBAL_MEOW_COOLDOWN: float = 2.0  # Minimum seconds between any meows
+
+func _process(delta: float) -> void:
+	if _global_meow_cooldown > 0:
+		_global_meow_cooldown -= delta
+
+func play_meow(pitch_scale: float = 1.0) -> void:
+	if _global_meow_cooldown > 0:
+		return  # Skip if another cat just meowed
+	_global_meow_cooldown = GLOBAL_MEOW_COOLDOWN
+	_play_sfx(variant, pitch_scale)
 ```
 
 ## Development Workflow Tips

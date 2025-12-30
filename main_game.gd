@@ -20,11 +20,13 @@ extends Node2D
 
 var room_bounds: Rect2 = Rect2(50, 100, 700, 400)
 var room_ball: Node2D = null
+var scratching_post: Node2D = null
 
 func _ready():
 	setup_camera()
 	setup_room()
 	spawn_ball()
+	spawn_scratching_post()
 	connect_signals()
 	style_settings_ui()
 	start_first_spawn()
@@ -40,6 +42,15 @@ func spawn_ball():
 
 	# Register ball with GameManager so cats can find it
 	GameManager.room_ball = room_ball
+
+func spawn_scratching_post():
+	var post_scene = preload("res://scratching_post.tscn")
+	scratching_post = post_scene.instantiate()
+	scratching_post.global_position = Vector2(150, 470)  # Left side of room, on the floor
+	add_child(scratching_post)
+
+	# Register with GameManager so cats can find it
+	GameManager.scratching_post = scratching_post
 
 func _input(event: InputEvent):
 	# Capture touch/click events for "look at player" behavior

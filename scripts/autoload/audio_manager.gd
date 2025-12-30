@@ -41,6 +41,11 @@ var sound_fusion: AudioStream
 var sound_currency: AudioStream
 var sound_spawn: AudioStream
 var sound_ui_click: AudioStream
+var sound_purr: AudioStream
+
+# Global meow cooldown to prevent multiple cats meowing at the same time
+var _global_meow_cooldown: float = 0.0
+const GLOBAL_MEOW_COOLDOWN: float = 2.0  # Minimum seconds between any meows
 
 func _ready() -> void:
 	_setup_audio_buses()
@@ -48,6 +53,11 @@ func _ready() -> void:
 	_load_audio_files()
 	_generate_placeholder_sounds()
 	print("AudioManager: Initialized")
+
+func _process(delta: float) -> void:
+	# Update global meow cooldown
+	if _global_meow_cooldown > 0:
+		_global_meow_cooldown -= delta
 
 func _load_audio_files() -> void:
 	# Load real audio files if they exist
@@ -133,6 +143,7 @@ func _generate_placeholder_sounds() -> void:
 	sound_currency = _create_currency_sound()
 	sound_spawn = _create_spawn_sound()
 	sound_ui_click = _create_click_sound()
+	sound_purr = _create_purr_sound()
 
 func _create_meow_sound(duration: float = 0.25) -> AudioStreamWAV:
 	# Create a cute, soft "mew" sound - short and sweet
@@ -297,6 +308,59 @@ func _create_click_sound() -> AudioStreamWAV:
 	stream.data = data
 	return stream
 
+func _create_purr_sound() -> AudioStreamWAV:
+	# Purr: a soft, rumbling, rhythmic sound
+	var sample_rate := 22050
+	var duration := 1.5  # Longer purr sound
+	var samples := int(sample_rate * duration)
+	var data := PackedByteArray()
+	data.resize(samples * 2)
+
+	for i in range(samples):
+		var t: float = float(i) / sample_rate
+		var progress: float = float(i) / samples
+
+		# Purr is a low frequency rumble (~25-30 Hz) with harmonics
+		var base_freq: float = 28.0
+
+		# Amplitude modulation to create the rhythmic "rr-rr-rr" pattern
+		# Cats purr at about 25-50 cycles per second
+		var purr_rate: float = 26.0
+		var purr_modulation: float = 0.5 + 0.5 * sin(t * purr_rate * TAU)
+
+		# Multiple harmonics for richness
+		var harmonic1: float = sin(t * base_freq * TAU) * 0.4
+		var harmonic2: float = sin(t * base_freq * 2.0 * TAU) * 0.25
+		var harmonic3: float = sin(t * base_freq * 3.0 * TAU) * 0.15
+		var harmonic4: float = sin(t * base_freq * 4.0 * TAU) * 0.1
+
+		# Add a bit of noise for texture
+		var noise: float = randf_range(-0.05, 0.05)
+
+		# Combine harmonics with purr modulation
+		var purr: float = (harmonic1 + harmonic2 + harmonic3 + harmonic4 + noise) * purr_modulation
+
+		# Envelope: fade in, sustain, fade out
+		var envelope: float
+		if progress < 0.1:
+			envelope = progress / 0.1  # Fade in
+		elif progress > 0.85:
+			envelope = (1.0 - progress) / 0.15  # Fade out
+		else:
+			envelope = 1.0  # Sustain
+
+		var sample_value: float = purr * envelope * 0.35
+
+		var sample_int: int = int(clampf(sample_value, -1.0, 1.0) * 32767)
+		data[i * 2] = sample_int & 0xFF
+		data[i * 2 + 1] = (sample_int >> 8) & 0xFF
+
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.data = data
+	return stream
+
 func _create_lofi_music() -> AudioStreamWAV:
 	# Create a smooth, cozy ambient music loop
 	var sample_rate := 22050
@@ -362,6 +426,11 @@ func start_background_music() -> void:
 func play_meow(pitch_scale: float = 1.0) -> void:
 	if not sfx_enabled or sound_meow_variants.is_empty():
 		return
+	# Check global cooldown to prevent multiple cats meowing at the same time
+	if _global_meow_cooldown > 0:
+		return
+	# Set global cooldown
+	_global_meow_cooldown = GLOBAL_MEOW_COOLDOWN
 	# Pick random meow variant
 	var variant = sound_meow_variants[randi() % sound_meow_variants.size()]
 	_play_sfx(variant, pitch_scale)
@@ -385,6 +454,11 @@ func play_ui_click() -> void:
 	if not sfx_enabled or not sound_ui_click:
 		return
 	_play_sfx(sound_ui_click)
+
+func play_purr(pitch_scale: float = 1.0) -> void:
+	if not sfx_enabled or not sound_purr:
+		return
+	_play_sfx(sound_purr, pitch_scale)
 
 func _play_sfx(stream: AudioStream, pitch: float = 1.0) -> void:
 	# Find an available SFX player

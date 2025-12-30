@@ -26,6 +26,7 @@ const LOOK_CHANCE: float = 0.7  # 70% chance to look when player touches
 
 # Nap/sleep variables
 var is_napping: bool = false
+var is_walking_to_bed: bool = false
 var zzz_particles: CPUParticles2D = null
 
 # Drag and drop variables
@@ -46,6 +47,13 @@ const PLAY_PUSH_SPEED: float = 40.0  # Gentle push speed
 const PLAY_APPROACH_DISTANCE: float = 45.0  # Must be > collision radii combined (~32px)
 const PLAY_TOUCH_DISTANCE: float = 45.0  # Close enough to push
 
+# Scratching post variables
+var is_scratching: bool = false
+var is_walking_to_post: bool = false
+var target_post: Node2D = null
+var scratch_tween: Tween = null
+const SCRATCH_DISTANCE: float = 30.0  # Distance to stand from post while scratching
+
 func _ready():
 	# Defer setup to ensure all nodes are ready
 	call_deferred("_setup_connections")
@@ -62,9 +70,17 @@ func _process(delta):
 	if is_walking and not is_being_dragged:
 		process_walking(delta)
 
+	# Handle walking to bed for napping
+	if is_walking_to_bed and not is_being_dragged:
+		process_walking_to_bed(delta)
+
 	# Handle ball playing
 	if is_playing_with_ball and not is_being_dragged:
 		process_ball_play(delta)
+
+	# Handle walking to scratching post
+	if is_walking_to_post and not is_being_dragged:
+		process_walking_to_post(delta)
 
 	# Handle look at player timer
 	if is_looking_at_player:
@@ -443,12 +459,16 @@ func set_selected(selected: bool):
 
 func _on_behavior_changed(new_behavior: String):
 	# Stop napping if we were napping and behavior changed
-	if is_napping and new_behavior != "nap":
+	if (is_napping or is_walking_to_bed) and new_behavior != "nap":
 		stop_napping()
 
 	# Stop ball playing if behavior changed
 	if is_playing_with_ball and new_behavior != "play":
 		stop_playing_with_ball()
+
+	# Stop scratching if behavior changed
+	if (is_scratching or is_walking_to_post) and new_behavior != "scratch":
+		stop_scratching()
 
 	play_animation(new_behavior)
 
@@ -489,6 +509,10 @@ func play_animation(animation_name: String):
 				tween.set_loops(2)
 				tween.tween_property(sprite, "position:y", sprite.position.y - 5, 0.2)
 				tween.tween_property(sprite, "position:y", sprite.position.y, 0.2)
+		"scratch":
+			# Scratching motion - rapid up-down with slight angle
+			if sprite:
+				sprite.rotation_degrees = -15  # Leaning toward post
 		_:
 			if sprite:
 				sprite.rotation_degrees = 0
@@ -684,6 +708,100 @@ func _stop_paw_animation():
 	if sprite:
 		sprite.rotation_degrees = 0
 
+# --- Scratching Post Behavior ---
+
+func start_scratching(post: Node2D):
+	if not post:
+		return
+
+	# Don't restart if already scratching this post
+	if is_scratching and target_post == post:
+		return
+
+	target_post = post
+	is_walking_to_post = true
+	is_walking = false  # Stop any current walking
+
+	# Face the post
+	if sprite:
+		sprite.flip_h = post.global_position.x < global_position.x
+
+func process_walking_to_post(delta):
+	if not target_post or not is_instance_valid(target_post):
+		stop_scratching()
+		return
+
+	var post_pos = target_post.global_position
+	var direction = (post_pos - global_position).normalized()
+	var distance = global_position.distance_to(post_pos)
+
+	# Arrived at post?
+	if distance < SCRATCH_DISTANCE:
+		is_walking_to_post = false
+		_start_actual_scratching()
+		return
+
+	# Walk toward the post
+	velocity = direction * walk_speed
+	move_and_slide()
+
+	# Face the direction we're walking
+	if sprite:
+		sprite.flip_h = direction.x < 0
+
+func _start_actual_scratching():
+	is_scratching = true
+
+	# Tell the post it's being scratched
+	if target_post and target_post.has_method("start_scratch"):
+		target_post.start_scratch()
+
+	# Start scratching animation
+	_start_scratch_animation()
+
+	# Face the post
+	if sprite and target_post:
+		sprite.flip_h = target_post.global_position.x < global_position.x
+
+func stop_scratching():
+	# Tell the post we stopped
+	if target_post and target_post.has_method("stop_scratch"):
+		target_post.stop_scratch()
+
+	is_scratching = false
+	is_walking_to_post = false
+	target_post = null
+
+	# Stop scratch animation
+	_stop_scratch_animation()
+
+	# Reset visual effects
+	_apply_tier_effects()
+	if sprite:
+		sprite.rotation_degrees = 0
+
+func _start_scratch_animation():
+	if not sprite:
+		return
+
+	if scratch_tween and scratch_tween.is_valid():
+		scratch_tween.kill()
+
+	# Rapid up-down scratching motion
+	scratch_tween = create_tween()
+	scratch_tween.set_loops()
+	scratch_tween.tween_property(sprite, "position:y", -3, 0.08)
+	scratch_tween.tween_property(sprite, "position:y", 3, 0.08)
+	scratch_tween.tween_property(sprite, "position:y", -2, 0.08)
+	scratch_tween.tween_property(sprite, "position:y", 2, 0.08)
+
+func _stop_scratch_animation():
+	if scratch_tween and scratch_tween.is_valid():
+		scratch_tween.kill()
+
+	if sprite:
+		sprite.position.y = 0
+
 func _on_currency_generated(amount: int, _gen_position: Vector2):
 	show_currency_popup(amount)
 	AudioManager.play_currency()
@@ -759,13 +877,46 @@ func play_spawn_effect():
 # --- Nap/Sleep Behavior ---
 
 func start_napping():
+	# First, walk to the cat bed
+	is_walking_to_bed = true
+	is_walking = false  # Stop any current walking
+
+	# Face the bed
+	if sprite:
+		sprite.flip_h = GameManager.cat_bed_position.x < global_position.x
+
+func process_walking_to_bed(delta):
+	var bed_pos = GameManager.cat_bed_position
+	var direction = (bed_pos - global_position).normalized()
+	var distance = global_position.distance_to(bed_pos)
+
+	# Arrived at bed?
+	if distance < 20.0:
+		is_walking_to_bed = false
+		_start_actual_napping()
+		return
+
+	# Walk toward the bed
+	velocity = direction * walk_speed
+	move_and_slide()
+
+	# Face the direction we're walking
+	if sprite:
+		sprite.flip_h = direction.x < 0
+
+func _start_actual_napping():
 	is_napping = true
 	play_animation("nap")
 	_create_zzz_particles()
+	# Play purr sound when settling down
+	AudioManager.play_purr(_get_purr_pitch())
 
 func stop_napping():
 	is_napping = false
+	is_walking_to_bed = false
 	_remove_zzz_particles()
+	# Reset visual effects
+	_apply_tier_effects()
 
 func _create_zzz_particles():
 	if zzz_particles:
@@ -870,5 +1021,25 @@ func _get_meow_pitch() -> float:
 			return randf_range(0.75, 0.9)  # Majestic deep meow
 		"cosmic":
 			return randf_range(0.6, 0.8)  # Very deep, otherworldly
+		_:
+			return 1.0
+
+func _get_purr_pitch() -> float:
+	# Similar to meow pitch but slightly lower for purring
+	if not cat_data:
+		return 1.0
+	match cat_data.tier:
+		"kitten":
+			return randf_range(1.1, 1.3)  # Soft kitten purr
+		"house":
+			return randf_range(0.95, 1.1)  # Normal cat purr
+		"fancy":
+			return randf_range(0.9, 1.05)  # Elegant purr
+		"mystical":
+			return randf_range(0.8, 0.95)  # Deep mystical purr
+		"legendary":
+			return randf_range(0.7, 0.85)  # Powerful purr
+		"cosmic":
+			return randf_range(0.55, 0.75)  # Deep cosmic rumble
 		_:
 			return 1.0

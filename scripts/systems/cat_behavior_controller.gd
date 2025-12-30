@@ -1,6 +1,6 @@
 class_name CatBehaviorController extends Node
 
-@export var behavior_set: Array = ["idle", "walk", "sit", "meow", "play"]
+@export var behavior_set: Array = ["idle", "walk", "sit", "meow", "play", "scratch"]
 @export var current_behavior: String = "idle"
 @export var behavior_timer: float = 0.0
 
@@ -12,7 +12,8 @@ var behavior_durations = {
 	"meow": [0.5, 1.0],
 	"play": [6.0, 12.0],  # Longer duration to reach and play with ball
 	"nap": [4.0, 8.0],
-	"groom": [2.0, 4.0]
+	"groom": [2.0, 4.0],
+	"scratch": [4.0, 8.0]  # Walk to post and scratch
 }
 
 signal behavior_changed(new_behavior: String)
@@ -87,6 +88,8 @@ func execute_behavior():
 			execute_nap()
 		"groom":
 			execute_groom()
+		"scratch":
+			execute_scratch()
 
 func execute_idle():
 	if cat_owner.has_method("play_animation"):
@@ -101,8 +104,8 @@ func execute_sit():
 		cat_owner.play_animation("sit")
 
 func execute_meow():
-	if cat_owner.has_method("play_animation"):
-		cat_owner.play_animation("meow")
+	# Note: play_animation is already called by _on_behavior_changed in cat.gd
+	# So we only need to set the cooldown here, NOT call play_animation again
 	# Set cooldown so this cat doesn't meow again too soon
 	meow_cooldown = randf_range(MEOW_COOLDOWN_MIN, MEOW_COOLDOWN_MAX)
 
@@ -124,6 +127,14 @@ func execute_nap():
 func execute_groom():
 	if cat_owner.has_method("play_animation"):
 		cat_owner.play_animation("groom")
+
+func execute_scratch():
+	# Try to scratch the post if it exists
+	if GameManager.scratching_post and cat_owner.has_method("start_scratching"):
+		cat_owner.start_scratching(GameManager.scratching_post)
+	elif cat_owner.has_method("play_animation"):
+		# No post, just play a scratching animation in place
+		cat_owner.play_animation("scratch")
 
 func play_meow_sound():
 	# TODO: Play random meow sound
